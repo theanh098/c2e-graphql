@@ -1,0 +1,347 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+generator nestgraphql {
+    provider = "node node_modules/prisma-nestjs-graphql"
+    // for yarn monorepos
+    // provider = "prisma-nestjs-graphql"
+    output = "../src/@generated"
+} 
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id              Int                     @id @default(autoincrement())
+  mainCategory    MainCategories          @default(currencies) @map("main_category")
+  status          BusinessStatus          @default(pending)
+  type            String[]                @db.VarChar()
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
+  name            String                  @unique @db.VarChar
+  overview        String                  @db.VarChar
+  creatorId       Int                     @map("creator_id")
+  token           String?                 @db.VarChar
+  cmcId           Int?                    @map("cmc_id")
+  logo            String?                 @db.VarChar
+  founderName     String?                 @map("founder_name") @db.VarChar
+  startDate       DateTime?               @map("start_date") @db.Timestamp(6)
+  address         String?                 @db.VarChar
+  whitepaperUrl   String?                 @map("whitepaper_url") @db.VarChar
+  contractAddress String?                 @map("contract_address") @db.VarChar
+  contractChain   String?                 @map("contract_chain") @db.VarChar
+  website         String?                 @db.VarChar
+  chains          String[]                @db.VarChar()
+  reviews         Review[]
+  medias          Media[]
+  notifications   Notification[]
+  followers       FollowersOnBusinesses[]
+  ratings         RatesOnBusinesses[]
+  creator         SuperUser               @relation(fields: [creatorId], references: [id])
+  feedbacks       FeedbacksOnBusinesses[]
+
+  @@index([type])
+  @@index([mainCategory])
+  @@index([mainCategory, type])
+  @@index([cmcId])
+  @@index([token])
+  @@index([cmcId, token])
+  @@map("businesses")
+}
+
+model Media {
+  id         Int          @id @default(autoincrement())
+  source     MediaSoucres
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  url        String       @db.VarChar
+  businessId Int          @map("business_id")
+  path       String?
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("medias")
+}
+
+model User {
+  id                    Int                     @id @default(autoincrement())
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
+  walletAddress         String                  @unique @map("wallet_address") @db.VarChar
+  notiAccepted          Boolean                 @default(true) @map("noti_accepted")
+  spamAccepted          Boolean                 @default(true) @map("spam_accepted")
+  email                 String?                 @unique @db.VarChar
+  nickname              String?                 @db.VarChar
+  avatarUrl             String?                 @map("avatar_url") @db.VarChar
+  refreshToken          String?                 @map("refresh_token") @db.VarChar
+  isAdmin               Boolean                 @default(false)
+  password              String?                 @db.VarChar
+  lastEditedDate        DateTime?               @map("last_edited_date") @db.Timestamp(6)
+  role                  String?                 @db.VarChar
+  backgroundUrl         String?                 @map("background_url") @db.VarChar
+  address               String?                 @db.VarChar
+  bio                   String?                 @db.VarChar
+  website               String?                 @db.VarChar
+  facebook              String?                 @db.VarChar
+  twitter               String?                 @db.VarChar
+  google                String?                 @db.VarChar
+  linkedin              String?                 @db.VarChar
+  telegram              String?                 @db.VarChar
+  discord               String?                 @db.VarChar
+  didId                 Int?
+  replies               Reply[]
+  reviews               Review[]
+  followingBusinesses   FollowersOnBusinesses[]
+  ratedBusinesses       RatesOnBusinesses[]
+  notificationsTo       Notification[]          @relation("notifications_toUser")
+  notificationsFrom     Notification[]          @relation("notifications_fromUser")
+  onCampaigns           UsersOnCampaigns[]
+  did                   Did?                    @relation(fields: [didId], references: [id], onDelete: SetNull)
+  feedbacksOnBusinesses FeedbacksOnBusinesses[]
+  repliesOnFeedbacks    ReplyOnFeedback[]
+
+  @@map("users")
+}
+
+model FollowersOnBusinesses {
+  followerId Int      @map("follower_id")
+  follower   User     @relation(fields: [followerId], references: [id])
+  businessId Int      @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id])
+
+  @@id([followerId, businessId])
+  @@map("followers_on_businesses")
+}
+
+model Email {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  email     String   @unique @db.VarChar
+  code      String?  @db.VarChar
+
+  @@map("emails")
+}
+
+model Notification {
+  id         Int               @id @default(autoincrement())
+  type       Notificationtypes
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  businessId Int               @map("business_id")
+  reviewId   Int               @map("review_id")
+  seen       Boolean           @default(false)
+  to         Int
+  from       Int?
+  metaData   String?           @map("meta_data") @db.VarChar
+  business   Business          @relation(fields: [businessId], references: [id])
+  review     Review            @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userTo     User              @relation("notifications_toUser", fields: [to], references: [id])
+  userFrom   User?             @relation("notifications_fromUser", fields: [from], references: [id])
+
+  @@map("notifications")
+}
+
+model Review {
+  id            Int             @id @default(autoincrement())
+  status        ReviewStatuses  @default(pending)
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamp(6)
+  rate          Int
+  businessId    Int             @map("business_id")
+  userId        Int             @map("user_id")
+  likes         Int[]           @default([])
+  dislikes      Int[]           @default([])
+  sharings      Int[]           @default([])
+  headline      String?         @db.VarChar
+  comment       String?         @db.VarChar
+  txnHash       String?         @unique @map("txn_hash")
+  histories     ReviewHistory[]
+  replies       Reply[]
+  notifications Notification[]
+  business      Business        @relation(fields: [businessId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+model ReviewHistory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  rate      Int
+  reviewId  Int      @map("review_id")
+  txnHash   String   @unique @map("txn_hash")
+  headline  String?  @db.VarChar
+  comment   String?  @db.VarChar
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_histories")
+}
+
+model Reply {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  desc      String   @db.VarChar
+  reviewId  Int      @map("review_id")
+  likes     Int[]    @default([])
+  dislikes  Int[]    @default([])
+  userId    Int      @map("user_id")
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("replies")
+}
+
+model SuperUser {
+  id           Int            @id @default(autoincrement())
+  role         SuperUserRoles
+  refreshToken String?        @map("refresh_token") @db.VarChar
+  username     String         @unique @db.VarChar
+  password     String         @db.VarChar
+  avatar       String?        @db.VarChar
+  businesses   Business[]
+
+  @@map("super_users")
+}
+
+model RatesOnBusinesses {
+  valuerId   Int      @map("valuer_id")
+  valuer     User     @relation(fields: [valuerId], references: [id])
+  businessId Int      @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id])
+  rating     Int
+
+  @@id([valuerId, businessId])
+  @@map("rates_on_businesses")
+}
+
+model Campaign {
+  id              Int                @id @default(autoincrement())
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
+  title           String             @db.VarChar
+  description     String             @db.VarChar
+  metadata        String?            @db.VarChar
+  usersOnCampaign UsersOnCampaigns[]
+
+  @@map("campaigns")
+}
+
+model UsersOnCampaigns {
+  userId     Int      @map("user_id")
+  campaignId Int      @map("campaign_id")
+  claimed    Boolean  @default(false)
+  amount     Int
+  txnHash    String?  @db.VarChar
+  user       User     @relation(fields: [userId], references: [id])
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  @@id([userId, campaignId])
+  @@map("users_on_campaigns")
+}
+
+model Did {
+  id      Int    @id
+  doc     Json
+  txnHash String @map("txn_hash") @db.VarChar
+  users   User[]
+
+  @@map("dids")
+}
+
+model Storage {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  url       String   @db.VarChar
+  tag       String?  @db.VarChar
+  banners   Banner[]
+
+  @@map("storages")
+}
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  expriedTime DateTime @map("expried_time") @db.Timestamp(6)
+  sourceId    Int      @map("source_id")
+  source      Storage  @relation(fields: [sourceId], references: [id])
+
+  @@map("banners")
+}
+
+model FeedbacksOnBusinesses {
+  id         Int               @id @default(autoincrement())
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  businessId Int               @map("business_id")
+  userId     Int               @map("user_id")
+  text       String            @db.VarChar
+  urls       String[]          @db.VarChar
+  likes      Int[]             @default([])
+  dislikes   Int[]             @default([])
+  business   Business          @relation(fields: [businessId], references: [id])
+  user       User              @relation(fields: [userId], references: [id])
+  replies    ReplyOnFeedback[]
+
+  @@map("feedbacks_on_businesses")
+}
+
+model ReplyOnFeedback {
+  id         Int                   @id @default(autoincrement())
+  createdAt  DateTime              @default(now()) @map("created_at") @db.Timestamp(6)
+  feedbackId Int                   @map("feedback_id")
+  userId     Int                   @map("user_id")
+  desc       String
+  user       User                  @relation(fields: [userId], references: [id])
+  feedback   FeedbacksOnBusinesses @relation(fields: [feedbackId], references: [id])
+
+  @@map("replies_on_feedbacks")
+}
+
+model HashMap {
+  id    Int      @id @default(autoincrement())
+  key   String   @unique @db.VarChar
+  value String[] @db.VarChar
+
+  @@map("hash_maps")
+}
+
+enum MediaSoucres {
+  Photo
+  Telegram
+  Discord
+  Twitter
+  Blog
+}
+
+enum Notificationtypes {
+  like
+  dislike
+  reply
+  tagged
+  review_rejected
+  review_approved
+}
+
+enum ReviewStatuses {
+  approved
+  pending
+  rejected
+}
+
+enum MainCategories {
+  currencies
+  exchange
+  cryptocurrencies
+  nft
+  metaverse
+  ai
+  others
+  lightning_network @map("lightning network")
+}
+
+enum SuperUserRoles {
+  admin
+  editor
+}
+
+enum BusinessStatus {
+  approved
+  pending
+  rejected
+}

@@ -1,0 +1,213 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type NotificationModel {
+  id: Int!
+  type: Notificationtypes!
+  createdAt: DateTime!
+  businessId: Int!
+  reviewId: Int!
+  seen: Boolean!
+  to: Int!
+  from: Int
+  metaData: String
+  business: BusinessModel!
+  review: ReviewModel!
+  userTo: UserModel!
+  userFrom: UserModel
+}
+
+enum Notificationtypes {
+  like
+  dislike
+  reply
+  tagged
+  review_rejected
+  review_approved
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type CampaignModel {
+  id: Int!
+  createdAt: DateTime!
+  title: String!
+  description: String!
+  metadata: String
+  usersOnCampaign: [UserModel!]!
+}
+
+type DidModel {
+  id: Int!
+  doc: JSON!
+  txnHash: String!
+  users: [UserModel!]
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type ReplyOnFeedbackModel {
+  id: Int!
+  createdAt: DateTime!
+  feedbackId: Int!
+  userId: Int!
+  desc: String!
+  user: UserModel!
+  feedback: FeedbackOnBusinessModelodel!
+}
+
+type FeedbackOnBusinessModelodel {
+  id: Int!
+  createdAt: DateTime!
+  businessId: Int!
+  userId: Int!
+  text: String!
+  urls: [String!]!
+  likes: [Int]!
+  dislikes: [Int]!
+  business: BusinessModel!
+  user: UserModel!
+  replies: [ReplyOnFeedbackModel!]!
+}
+
+type UserModel {
+  id: Int!
+  createdAt: DateTime!
+  walletAddress: String!
+  notiAccepted: Boolean!
+  spamAccepted: Boolean!
+  email: String
+  nickname: String
+  avatarUrl: String
+  isAdmin: Boolean!
+  password: String
+  lastEditedDate: DateTime
+  role: String
+  backgroundUrl: String
+  address: String
+  bio: String
+  website: String
+  facebook: String
+  twitter: String
+  google: String
+  linkedin: String
+  telegram: String
+  discord: String
+  didId: Int
+  replies: [ReplyModel!]!
+  reviews: [ReviewModel!]!
+  followingBusinesses: [BusinessModel!]!
+  ratedBusinesses: [BusinessModel!]!
+  notifications: [NotificationModel!]!
+  onCampaigns: [CampaignModel!]!
+  did: DidModel
+  feedbacksOnBusinesses: [FeedbackOnBusinessModelodel!]!
+  repliesOnFeedbacks: [ReplyOnFeedbackModel!]!
+}
+
+type ReplyModel {
+  id: Int!
+  createdAt: DateTime!
+  reviewId: Int!
+  userId: Int!
+  likes: [Int]!
+  dislikes: [Int]!
+  desc: String!
+  user: UserModel!
+  review: ReviewModel!
+}
+
+type ReviewModel {
+  id: Int!
+  status: ReviewStatuses!
+  createdAt: DateTime!
+  rate: Int!
+  businessId: Int!
+  userId: Int!
+  likes: [Int]!
+  dislikes: [Int]!
+  sharings: [Int]!
+  headline: String
+  comment: String
+  txnHash: String
+  business: BusinessModel!
+  user: UserModel!
+  replies: [ReplyModel!]!
+}
+
+enum ReviewStatuses {
+  approved
+  pending
+  rejected
+}
+
+type MediaModel {
+  id: Int!
+  source: MediaSoucres!
+  createdAt: DateTime!
+  url: String!
+  businessId: Int!
+  path: String
+}
+
+enum MediaSoucres {
+  Photo
+  Telegram
+  Discord
+  Twitter
+  Blog
+}
+
+type BusinessModel {
+  id: Int!
+  mainCategory: MainCategories!
+  createdAt: DateTime!
+  name: String!
+  overview: String!
+  chains: [String]!
+  type: [String!]!
+  token: String
+  cmcId: Int
+  logo: String
+  founderName: String
+  startDate: DateTime
+  address: String
+  whitepaperUrl: String
+  contractAddress: String
+  contractChain: String
+  website: String
+  followByU: Boolean!
+  reviews: [ReviewModel]!
+  medias: [MediaModel]!
+  followers: [UserModel]!
+  feedbacks: [FeedbackOnBusinessModelodel]!
+}
+
+enum MainCategories {
+  currencies
+  exchange
+  cryptocurrencies
+  nft
+  metaverse
+  ai
+  others
+  lightning_network
+}
+
+type RandomBusinesses {
+  data: [BusinessModel]!
+  limit: Int!
+  totalProject: Int
+  totalReview: Int
+}
+
+type Query {
+  randomBusinesses(type: String, hasBannerOnly: Boolean, limit: Int!): RandomBusinesses!
+}
