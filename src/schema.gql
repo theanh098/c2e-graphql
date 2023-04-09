@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type SignEthereumResponse {
+  accessToken: String!
+  refreshToken: String!
+}
+
 type NotificationModel {
   id: Int!
   type: Notificationtypes!
@@ -210,4 +215,19 @@ type RandomBusinesses {
 
 type Query {
   randomBusinesses(type: String, hasBannerOnly: Boolean, limit: Int!): RandomBusinesses!
+}
+
+type Mutation {
+  signEthereum(message: SiweMessageInputs!, signature: String!): SignEthereumResponse!
+}
+
+input SiweMessageInputs {
+  address: String!
+  chainId: Float!
+  domain: String!
+  issuedAt: String!
+  nonce: String!
+  statement: String!
+  uri: String!
+  version: String!
 }
