@@ -7,9 +7,11 @@ import {
   Max,
   Min
 } from 'class-validator';
+import { Business } from 'models/business.model';
+import { PaginatedQueryFactory } from 'queries/paginated.query';
 
 @ArgsType()
-export class RandomBusinessesInput {
+export class RandomBusinessesArgs {
   @Field({ nullable: true })
   @IsOptional()
   @IsNotEmpty()

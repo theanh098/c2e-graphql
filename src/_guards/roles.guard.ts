@@ -1,5 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
+import { DecodedPayload } from 'types/auth.payload';
 import { Roles } from 'types/enum';
 
 @Injectable()
@@ -11,8 +13,8 @@ export class RolesGuard implements CanActivate {
     if (role !== Roles.Admin) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const { req } = GqlExecutionContext.create(context).getContext();
+    const user = req.user as DecodedPayload;
     return user.isAdmin;
   }
 }

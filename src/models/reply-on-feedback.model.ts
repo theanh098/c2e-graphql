@@ -1,28 +1,27 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { UserModel } from './user.model';
-import { FeedbackOnBusinessModelodel } from './feedback-on-business.model';
-import { ReplyOnFeedback } from '@prisma/client';
+import { FeedbacksOnBusinesses } from './feedbacks-on-businesses.model';
+import { User } from './user.model';
 
 @ObjectType()
-export class ReplyOnFeedbackModel implements ReplyOnFeedback {
+export class ReplyOnFeedback {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
   @Field(() => Date)
-  createdAt!: Date;
+  createdAt: Date;
 
   @Field(() => Int)
-  feedbackId!: number;
+  feedbackId: number;
 
   @Field(() => Int)
-  userId!: number;
+  userId: number;
 
   @Field(() => String)
-  desc!: string;
+  desc: string;
 
-  @Field(() => UserModel)
-  user!: UserModel;
+  @Field(() => User)
+  user: User;
 
-  @Field(() => FeedbackOnBusinessModelodel)
-  feedback!: FeedbackOnBusinessModelodel;
+  @Field(() => FeedbacksOnBusinesses)
+  feedback: FeedbacksOnBusinesses;
 }

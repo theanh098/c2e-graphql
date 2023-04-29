@@ -7,29 +7,16 @@ type SignEthereumResponse {
   refreshToken: String!
 }
 
-type NotificationModel {
+type Reply {
   id: Int!
-  type: Notificationtypes!
   createdAt: DateTime!
-  businessId: Int!
+  desc: String!
   reviewId: Int!
-  seen: Boolean!
-  to: Int!
-  from: Int
-  metaData: String
-  business: BusinessModel!
-  review: ReviewModel!
-  userTo: UserModel!
-  userFrom: UserModel
-}
-
-enum Notificationtypes {
-  like
-  dislike
-  reply
-  tagged
-  review_rejected
-  review_approved
+  likes: [Int]!
+  dislikes: [Int]!
+  userId: Int!
+  review: Review!
+  user: User!
 }
 
 """
@@ -37,99 +24,119 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type CampaignModel {
+type Social {
+  id: Int!
+  lastUpdate: DateTime
+  twitterId: String
+  twitter: String
+  discordId: String
+  discord: String
+  telegramId: String
+  telegram: String
+  userId: Int!
+  user: User!
+}
+
+type Campaign {
   id: Int!
   createdAt: DateTime!
   title: String!
   description: String!
   metadata: String
-  usersOnCampaign: [UserModel!]!
+  usersOnCampaign: [UsersOnCampaigns]!
 }
 
-type DidModel {
-  id: Int!
-  doc: JSON!
-  txnHash: String!
-  users: [UserModel!]
-}
-
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-"""
-scalar JSON
-
-type ReplyOnFeedbackModel {
-  id: Int!
-  createdAt: DateTime!
-  feedbackId: Int!
+type UsersOnCampaigns {
   userId: Int!
-  desc: String!
-  user: UserModel!
-  feedback: FeedbackOnBusinessModelodel!
+  campaignId: Int!
+  claimed: Boolean!
+  amount: Int!
+  txnHash: String
+  user: User!
+  campaign: Campaign!
 }
 
-type FeedbackOnBusinessModelodel {
+type Notification {
   id: Int!
+  type: String!
   createdAt: DateTime!
-  businessId: Int!
-  userId: Int!
-  text: String!
-  urls: [String!]!
-  likes: [Int]!
-  dislikes: [Int]!
-  business: BusinessModel!
-  user: UserModel!
-  replies: [ReplyOnFeedbackModel!]!
+  seen: Boolean!
+  to: Int!
+  reviewId: Int
+  businessId: Int
+  from: Int
+  metaData: String
+  userTo: User!
+  business: Business
+  review: Review
+  userFrom: User
 }
 
-type UserModel {
+type User {
   id: Int!
   createdAt: DateTime!
   walletAddress: String!
   notiAccepted: Boolean!
   spamAccepted: Boolean!
+  isAdmin: Boolean!
+  lastUpdate: DateTime
+  lastSyncIbt: DateTime
   email: String
+  backgroundUrl: String
   nickname: String
   avatarUrl: String
-  isAdmin: Boolean!
+  refreshToken: String
   password: String
-  lastEditedDate: DateTime
-  role: String
-  backgroundUrl: String
-  address: String
-  bio: String
-  website: String
-  facebook: String
-  twitter: String
-  google: String
-  linkedin: String
-  telegram: String
-  discord: String
-  didId: Int
-  replies: [ReplyModel!]!
-  reviews: [ReviewModel!]!
-  followingBusinesses: [BusinessModel!]!
-  ratedBusinesses: [BusinessModel!]!
-  notifications: [NotificationModel!]!
-  onCampaigns: [CampaignModel!]!
-  did: DidModel
-  feedbacksOnBusinesses: [FeedbackOnBusinessModelodel!]!
-  repliesOnFeedbacks: [ReplyOnFeedbackModel!]!
+  socical: Social
+  myActivities: [Activity]!
+  myReactActivities: [Activity]!
+  replies: [Reply]!
+  reviews: [Review]!
+  notificationsTo: [Notification]!
+  onCampaigns: [UsersOnCampaigns]!
 }
 
-type ReplyModel {
+type Activity {
   id: Int!
   createdAt: DateTime!
-  reviewId: Int!
+  kind: ActivityKind!
   userId: Int!
-  likes: [Int]!
-  dislikes: [Int]!
-  desc: String!
-  user: UserModel!
-  review: ReviewModel!
+  reviewId: Int!
+  point: Int!
+  fromUserId: Int
+  user: User!
+  reactUser: User
+  onReview: Review!
 }
 
-type ReviewModel {
+enum ActivityKind {
+  reviewapproved
+  reacthelpful
+  reactdownful
+  reply
+  share
+}
+
+type CriteriaReview {
+  id: Int!
+  name: String!
+  value: Int!
+  reviewId: Int!
+  review: Review!
+}
+
+type ReviewHistory {
+  id: Int!
+  createdAt: DateTime!
+  rate: Int!
+  reviewId: Int!
+  txnHash: String!
+  headline: String
+  comment: String
+  review: Review!
+}
+
+type Review {
   id: Int!
   status: ReviewStatuses!
   createdAt: DateTime!
@@ -142,9 +149,13 @@ type ReviewModel {
   headline: String
   comment: String
   txnHash: String
-  business: BusinessModel!
-  user: UserModel!
-  replies: [ReplyModel!]!
+  criterias: [CriteriaReview]!
+  histories: [ReviewHistory]!
+  replies: [Reply]!
+  notifications: [Notification]!
+  activities: [Activity]!
+  business: Business!
+  user: User!
 }
 
 enum ReviewStatuses {
@@ -153,13 +164,14 @@ enum ReviewStatuses {
   rejected
 }
 
-type MediaModel {
+type Media {
   id: Int!
   source: MediaSoucres!
   createdAt: DateTime!
   url: String!
   businessId: Int!
   path: String
+  business: Business!
 }
 
 enum MediaSoucres {
@@ -170,14 +182,54 @@ enum MediaSoucres {
   Blog
 }
 
-type BusinessModel {
+type FollowersOnBusinesses {
+  followerId: Int!
+  businessId: Int!
+  follower: User!
+  business: Business!
+}
+
+type RatesOnBusinesses {
+  valuerId: Int!
+  businessId: Int!
+  rating: Int!
+  valuer: User!
+  business: Business!
+}
+
+type ReplyOnFeedback {
   id: Int!
-  mainCategory: MainCategories!
+  createdAt: DateTime!
+  feedbackId: Int!
+  userId: Int!
+  desc: String!
+  user: User!
+  feedback: FeedbacksOnBusinesses!
+}
+
+type FeedbacksOnBusinesses {
+  id: Int!
+  createdAt: DateTime!
+  businessId: Int!
+  userId: Int!
+  text: String!
+  urls: [String]!
+  likes: [Int]!
+  dislikes: [Int]!
+  business: Business!
+  user: User!
+  replies: [ReplyOnFeedback]!
+}
+
+type Business {
+  id: Int!
+  mainCategory: String!
+  status: BusinessStatus!
+  type: [String]!
+  tags: [String]!
   createdAt: DateTime!
   name: String!
   overview: String!
-  chains: [String]!
-  type: [String!]!
   token: String
   cmcId: Int
   logo: String
@@ -188,33 +240,30 @@ type BusinessModel {
   contractAddress: String
   contractChain: String
   website: String
+  chains: [String!]
+  reviews: [Review]!
+  medias: [Media]!
+  followers: [FollowersOnBusinesses]!
+  ratings: [RatesOnBusinesses]!
+  feedbacks: [FeedbacksOnBusinesses]!
   followByU: Boolean!
-  reviews: [ReviewModel]!
-  medias: [MediaModel]!
-  followers: [UserModel]!
-  feedbacks: [FeedbackOnBusinessModelodel]!
 }
 
-enum MainCategories {
-  currencies
-  exchange
-  cryptocurrencies
-  nft
-  metaverse
-  ai
-  others
-  lightning_network
+enum BusinessStatus {
+  approved
+  pending
+  rejected
 }
 
-type RandomBusinesses {
-  data: [BusinessModel]!
+type PaginatedBusinesses {
+  nodes: [Business]!
+  page: Int!
   limit: Int!
-  totalProject: Int
-  totalReview: Int
+  total: Int!
 }
 
 type Query {
-  randomBusinesses(type: String, hasBannerOnly: Boolean, limit: Int!): RandomBusinesses!
+  businessses(limit: Int!, page: Int!): PaginatedBusinesses!
 }
 
 type Mutation {

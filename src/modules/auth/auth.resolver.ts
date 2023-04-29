@@ -8,14 +8,14 @@ import { SignMessageInputs } from 'inputs/auth.input';
 
 @Resolver()
 export class AuthResolver {
-  constructor(private readonly AuthService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Mutation(() => SignEthereumResponse)
   @UseGuards(SignEthereumGuard)
   signEthereum(
     @User('walletAddress') wallet: string,
     @Args() _signInputs: SignMessageInputs
-  ) {
-    console.log('wallet: ', wallet);
+  ): Promise<SignEthereumResponse> {
+    return this.authService.login(wallet);
   }
 }

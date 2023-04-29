@@ -1,14 +1,14 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { BusinessModel } from 'models/business.model';
+import { Business } from 'models/business.model';
 import { PaginatedQueryFactory } from './paginated.query';
 
 @ObjectType()
-export class PaginatedBusinesses extends PaginatedQueryFactory(BusinessModel) {}
+export class PaginatedBusinesses extends PaginatedQueryFactory(Business) {}
 
 @ObjectType()
 export class RandomBusinesses {
-  @Field(() => [BusinessModel], { nullable: 'items' })
-  data: BusinessModel[];
+  @Field(() => [Business], { nullable: 'items' })
+  data: Business[];
 
   @Field(() => Int)
   limit: number;

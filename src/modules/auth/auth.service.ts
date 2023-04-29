@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { SignEthereumResponse } from 'models/auth.model';
 import { PrismaService } from 'modules/prisma/prisma.service';
 import { generateNonce } from 'siwe';
 import { DecodedPayload, PayloadToSign } from 'types/auth.payload';
@@ -89,17 +90,13 @@ export class AuthService {
       : null;
   }
 
-  async login(address: string) {
+  async login(address: string): Promise<SignEthereumResponse> {
     const user = await this.validateAdress(address);
 
-    const tokens = await this.generateTokens({
+    return await this.generateTokens({
       id: user.id,
       walletAddress: user.walletAddress
     });
-    return {
-      ...tokens,
-      user
-    };
   }
 
   async adminLogin({ id, isAdmin, walletAddress }: DecodedPayload) {

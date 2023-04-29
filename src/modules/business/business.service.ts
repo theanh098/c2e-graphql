@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { RandomBusinessesInput } from 'inputs';
+import { RandomBusinessesArgs } from 'inputs';
 import { PrismaService } from 'modules/prisma/prisma.service';
-import { RandomBusinesses } from 'queries/business.query';
+import { PaginatedBusinesses, RandomBusinesses } from 'queries/business.query';
+import { PaginatedInput } from 'queries/paginated.query';
 import { WhereBuilder } from 'utils/querybuilder';
 
 @Injectable()
@@ -12,60 +13,77 @@ export class BusinessService {
     @Inject('WHERE_BUILDER') private whereBuilder: WhereBuilder
   ) {}
 
-  async findRandom({
+  // async findRandom({
+  //   limit,
+  //   type,
+  //   hasBannerOnly
+  // }: RandomBusinessesInput): Promise<RandomBusinesses> {
+  //   this.whereBuilder.where(`"b"."status" = 'approved'`);
+
+  //   if (type) this.whereBuilder.andWhere(`'${type}' = ANY("b"."type")`);
+
+  //   if (hasBannerOnly)
+  //     this.whereBuilder.andWhere(`(
+  //           SELECT COUNT("m"."id") FROM "medias" "m"
+  //           WHERE "m"."business_id" = "b"."id"
+  //           AND "m"."source" = 'Photo'
+  //         ) > 0`);
+
+  //   const dataRaw = await this.prisma.$queryRawUnsafe<Array<{ id: number }>>(`
+  //         SELECT
+  //           "b"."id"
+  //         FROM "businesses" "b"
+  //         ${this.whereBuilder.getQuery()}
+  //         ORDER BY random()
+  //         LIMIT ${limit}
+  //       `);
+
+  //   const data = await this.prisma.business.findMany({
+  //     where: {
+  //       id: {
+  //         in: dataRaw.map(raw => raw.id)
+  //       }
+  //     },
+  //     include: {
+  //       medias: {
+  //         where: {
+  //           source: 'Photo'
+  //         },
+  //         take: 3
+  //       }
+  //     }
+  //   });
+
+  //   if (type) {
+  //     const [totalProject, totalReview] = await this.count(type);
+
+  //     return {
+  //       data,
+  //       limit,
+  //       totalProject,
+  //       totalReview
+  //     };
+  //   }
+  //   return {
+  //     data,
+  //     limit
+  //   };
+  // }
+
+  async findBusinesses({
     limit,
-    type,
-    hasBannerOnly
-  }: RandomBusinessesInput): Promise<RandomBusinesses> {
-    this.whereBuilder.where(`"b"."status" = 'approved'`);
-
-    if (type) this.whereBuilder.andWhere(`'${type}' = ANY("b"."type")`);
-
-    if (hasBannerOnly)
-      this.whereBuilder.andWhere(`(
-            SELECT COUNT("m"."id") FROM "medias" "m"
-            WHERE "m"."business_id" = "b"."id"
-            AND "m"."source" = 'Photo'
-          ) > 0`);
-
-    const dataRaw = await this.prisma.$queryRawUnsafe<Array<{ id: number }>>(`
-          SELECT
-            "b"."id"
-          FROM "businesses" "b"
-          ${this.whereBuilder.getQuery()}
-          ORDER BY random()
-          LIMIT ${limit}
-        `);
-
-    const data = await this.prisma.business.findMany({
-      where: {
-        id: {
-          in: dataRaw.map(raw => raw.id)
-        }
-      },
-      include: {
-        medias: {
-          where: {
-            source: 'Photo'
-          },
-          take: 3
-        }
-      }
+    page
+  }: PaginatedInput): Promise<PaginatedBusinesses> {
+    const nodes = await this.prisma.business.findMany({
+      take: limit,
+      skip: (page - 1) * limit
     });
 
-    if (type) {
-      const [totalProject, totalReview] = await this.count(type);
-
-      return {
-        data,
-        limit,
-        totalProject,
-        totalReview
-      };
-    }
     return {
-      data,
-      limit
+      limit,
+      page,
+      total: 10,
+      nodes
     };
   }
 

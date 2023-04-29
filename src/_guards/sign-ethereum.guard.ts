@@ -14,9 +14,7 @@ export class SignEthereumGuard implements CanActivate {
     const graphqlContext = GqlExecutionContext.create(context);
 
     const { req } = graphqlContext.getContext();
-    const args = graphqlContext.getArgs() as SignMessageInputs;
-
-    console.log('args: ', args);
+    const args = graphqlContext.getArgs<SignMessageInputs>();
 
     try {
       const { message, signature } = args;

@@ -1,17 +1,15 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Email } from '@prisma/client';
+import { Field } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
+import { Int } from '@nestjs/graphql';
 
 @ObjectType()
-export class EmailModel implements Email {
+export class Email {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
   @Field(() => Date)
-  createdAt!: Date;
+  createdAt: Date;
 
   @Field(() => String)
-  email!: string;
-
-  @Field(() => String, { nullable: true })
-  code!: string | null;
+  email: string;
 }

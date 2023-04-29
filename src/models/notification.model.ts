@@ -1,61 +1,46 @@
-import { Field, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { BusinessModel } from './business.model';
-import { ReviewModel } from './review.model';
-import { UserModel } from './user.model';
-import { Notification } from '@prisma/client';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Business } from './business.model';
+import { Review } from './review.model';
+import { User } from './user.model';
 
 @ObjectType()
-export class NotificationModel implements Notification {
+export class Notification {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
-  @Field(() => Notificationtypes)
-  type!: keyof typeof Notificationtypes;
+  @Field(() => String)
+  type: string;
 
   @Field(() => Date)
-  createdAt!: Date;
+  createdAt: Date;
+
+  @Field(() => Boolean, { nullable: false, defaultValue: false })
+  seen: boolean;
 
   @Field(() => Int)
-  businessId!: number;
-
-  @Field(() => Int)
-  reviewId!: number;
-
-  @Field(() => Boolean, { defaultValue: false })
-  seen!: boolean;
-
-  @Field(() => Int)
-  to!: number;
+  to: number;
 
   @Field(() => Int, { nullable: true })
-  from!: number | null;
+  reviewId?: number;
+
+  @Field(() => Int, { nullable: true })
+  businessId?: number;
+
+  @Field(() => Int, { nullable: true })
+  from?: number;
 
   @Field(() => String, { nullable: true })
-  metaData!: string | null;
+  metaData?: string;
 
-  @Field(() => BusinessModel)
-  business!: BusinessModel;
+  @Field(() => User)
+  userTo: User;
 
-  @Field(() => ReviewModel)
-  review!: ReviewModel;
+  @Field(() => Business, { nullable: true })
+  business?: Business;
 
-  @Field(() => UserModel)
-  userTo!: UserModel;
+  @Field(() => Review, { nullable: true })
+  review?: Review;
 
-  @Field(() => UserModel, { nullable: true })
-  userFrom!: UserModel | null;
+  @Field(() => User, { nullable: true })
+  userFrom?: User;
 }
-
-enum Notificationtypes {
-  like = 'like',
-  dislike = 'dislike',
-  reply = 'reply',
-  tagged = 'tagged',
-  review_rejected = 'review_rejected',
-  review_approved = 'review_approved'
-}
-
-registerEnumType(Notificationtypes, {
-  name: 'Notificationtypes',
-  description: undefined
-});

@@ -12,13 +12,3 @@ export const User = createParamDecorator(
     return data ? user?.[data] : user;
   }
 );
-
-//Http rest context
-export const RestCtxUser = createParamDecorator(
-  (data: keyof PayloadToSign, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user;
-
-    return data ? user?.[data] : user;
-  }
-);

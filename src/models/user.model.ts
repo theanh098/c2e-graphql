@@ -1,109 +1,73 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { User } from '@prisma/client';
-import { ReplyModel } from './reply.model';
-import { ReviewModel } from './review.model';
-import { BusinessModel } from './business.model';
-import { NotificationModel } from './notification.model';
-import { CampaignModel } from './campaign.model';
-import { DidModel } from './did.model';
-import { FeedbackOnBusinessModelodel } from './feedback-on-business.model';
-import { ReplyOnFeedbackModel } from './reply-on-feedback.model';
+import { Activity } from './activity.model';
+import { Reply } from './reply.model';
+import { Review } from './review.model';
+import { Social } from './social.model';
+import { UsersOnCampaigns } from './users-on-campaigns.model';
+import { Notification } from './notification.model';
 
 @ObjectType()
-export class UserModel implements Omit<User, 'refreshToken'> {
+export class User {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
   @Field(() => Date)
-  createdAt!: Date;
+  createdAt: Date;
 
   @Field(() => String)
-  walletAddress!: string;
+  walletAddress: string;
 
-  @Field(() => Boolean, { defaultValue: true })
-  notiAccepted!: boolean;
+  @Field(() => Boolean)
+  notiAccepted: boolean;
 
-  @Field(() => Boolean, { defaultValue: true })
-  spamAccepted!: boolean;
+  @Field(() => Boolean)
+  spamAccepted: boolean;
 
-  @Field(() => String, { nullable: true })
-  email!: string | null;
-
-  @Field(() => String, { nullable: true })
-  nickname!: string | null;
-
-  @Field(() => String, { nullable: true })
-  avatarUrl!: string | null;
-
-  @Field(() => Boolean, { defaultValue: false })
-  isAdmin!: boolean;
-
-  @Field(() => String, { nullable: true })
-  password!: string | null;
+  @Field(() => Boolean)
+  isAdmin: boolean;
 
   @Field(() => Date, { nullable: true })
-  lastEditedDate!: Date | null;
+  lastUpdate?: Date;
+
+  @Field(() => Date, { nullable: true })
+  lastSyncIbt?: Date;
 
   @Field(() => String, { nullable: true })
-  role!: string | null;
+  email?: string;
 
   @Field(() => String, { nullable: true })
-  backgroundUrl!: string | null;
+  backgroundUrl?: string;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  nickname?: string;
 
   @Field(() => String, { nullable: true })
-  bio!: string | null;
+  avatarUrl?: string;
 
   @Field(() => String, { nullable: true })
-  website!: string | null;
+  refreshToken?: string;
 
   @Field(() => String, { nullable: true })
-  facebook!: string | null;
+  password?: string;
 
-  @Field(() => String, { nullable: true })
-  twitter!: string | null;
+  @Field(() => Social, { nullable: true })
+  socical?: Social;
 
-  @Field(() => String, { nullable: true })
-  google!: string | null;
+  @Field(() => [Activity], { nullable: 'items' })
+  myActivities: Array<Activity>;
 
-  @Field(() => String, { nullable: true })
-  linkedin!: string | null;
+  @Field(() => [Activity], { nullable: 'items' })
+  myReactActivities: Array<Activity>;
 
-  @Field(() => String, { nullable: true })
-  telegram!: string | null;
+  @Field(() => [Reply], { nullable: 'items' })
+  replies: Array<Reply>;
 
-  @Field(() => String, { nullable: true })
-  discord!: string | null;
+  @Field(() => [Review], { nullable: 'items' })
+  reviews: Array<Review>;
 
-  @Field(() => Int, { nullable: true })
-  didId!: number | null;
+  @Field(() => [Notification], { nullable: 'items' })
+  notificationsTo: Array<Notification>;
 
-  @Field(() => [ReplyModel])
-  replies!: Array<ReplyModel>;
-
-  @Field(() => [ReviewModel])
-  reviews!: Array<ReviewModel>;
-
-  @Field(() => [BusinessModel])
-  followingBusinesses!: Array<BusinessModel>;
-
-  @Field(() => [BusinessModel])
-  ratedBusinesses!: Array<BusinessModel>;
-
-  @Field(() => [NotificationModel])
-  notifications!: Array<NotificationModel>;
-
-  @Field(() => [CampaignModel])
-  onCampaigns!: Array<CampaignModel>;
-
-  @Field(() => DidModel, { nullable: true })
-  did!: DidModel | null;
-
-  @Field(() => [FeedbackOnBusinessModelodel])
-  feedbacksOnBusinesses!: Array<FeedbackOnBusinessModelodel>;
-
-  @Field(() => [ReplyOnFeedbackModel])
-  repliesOnFeedbacks!: Array<ReplyOnFeedbackModel>;
+  @Field(() => [UsersOnCampaigns], { nullable: 'items' })
+  onCampaigns: Array<UsersOnCampaigns>;
 }

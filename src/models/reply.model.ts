@@ -1,34 +1,33 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Reply } from '@prisma/client';
-import { ReviewModel } from './review.model';
-import { UserModel } from './user.model';
+import { Review } from './review.model';
+import { User } from './user.model';
 
 @ObjectType()
-export class ReplyModel implements Reply {
+export class Reply {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
   @Field(() => Date)
-  createdAt!: Date;
-
-  @Field(() => Int)
-  reviewId!: number;
-
-  @Field(() => Int)
-  userId!: number;
-
-  @Field(() => [Int], { nullable: 'items' })
-  likes!: Array<number>;
-
-  @Field(() => [Int], { nullable: 'items' })
-  dislikes!: Array<number>;
+  createdAt: Date;
 
   @Field(() => String)
-  desc!: string;
+  desc: string;
 
-  @Field(() => UserModel)
-  user!: UserModel;
+  @Field(() => Int)
+  reviewId: number;
 
-  @Field(() => ReviewModel)
-  review!: ReviewModel;
+  @Field(() => [Int], { nullable: 'items' })
+  likes: Array<number>;
+
+  @Field(() => [Int], { nullable: 'items' })
+  dislikes: Array<number>;
+
+  @Field(() => Int)
+  userId: number;
+
+  @Field(() => Review)
+  review: Review;
+
+  @Field(() => User)
+  user: User;
 }

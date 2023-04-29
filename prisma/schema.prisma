@@ -3,13 +3,6 @@ generator client {
   previewFeatures = ["clientExtensions"]
 }
 
-generator nestgraphql {
-    provider = "node node_modules/prisma-nestjs-graphql"
-    // for yarn monorepos
-    // provider = "prisma-nestjs-graphql"
-    output = "../src/@generated"
-} 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -17,9 +10,10 @@ datasource db {
 
 model Business {
   id              Int                     @id @default(autoincrement())
-  mainCategory    MainCategories          @default(currencies) @map("main_category")
+  mainCategory    String                  @map("main_category") @db.VarChar
   status          BusinessStatus          @default(pending)
-  type            String[]                @db.VarChar()
+  type            String[]                @db.VarChar
+  tags            String[]                @db.VarChar
   createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
   name            String                  @unique @db.VarChar
   overview        String                  @db.VarChar
@@ -70,25 +64,20 @@ model User {
   walletAddress         String                  @unique @map("wallet_address") @db.VarChar
   notiAccepted          Boolean                 @default(true) @map("noti_accepted")
   spamAccepted          Boolean                 @default(true) @map("spam_accepted")
+  isAdmin               Boolean                 @default(false)
+  lastUpdate            DateTime?               @map("last_update") @db.Timestamp(6)
+  lastSyncIbt           DateTime?               @map("last_sync_ibt") @db.Timestamp(6)
   email                 String?                 @unique @db.VarChar
+  backgroundUrl         String?                 @map("background_url") @db.VarChar
   nickname              String?                 @db.VarChar
   avatarUrl             String?                 @map("avatar_url") @db.VarChar
   refreshToken          String?                 @map("refresh_token") @db.VarChar
-  isAdmin               Boolean                 @default(false)
   password              String?                 @db.VarChar
-  lastEditedDate        DateTime?               @map("last_edited_date") @db.Timestamp(6)
-  role                  String?                 @db.VarChar
-  backgroundUrl         String?                 @map("background_url") @db.VarChar
-  address               String?                 @db.VarChar
-  bio                   String?                 @db.VarChar
-  website               String?                 @db.VarChar
-  facebook              String?                 @db.VarChar
-  twitter               String?                 @db.VarChar
-  google                String?                 @db.VarChar
-  linkedin              String?                 @db.VarChar
-  telegram              String?                 @db.VarChar
-  discord               String?                 @db.VarChar
   didId                 Int?
+  socical               Social?
+  did                   Did?                    @relation(fields: [didId], references: [id], onDelete: SetNull)
+  myActivities          Activity[]              @relation("activities_of_users")
+  myReactActivities     Activity[]              @relation("reacted_activities_of_users")
   replies               Reply[]
   reviews               Review[]
   followingBusinesses   FollowersOnBusinesses[]
@@ -96,11 +85,25 @@ model User {
   notificationsTo       Notification[]          @relation("notifications_toUser")
   notificationsFrom     Notification[]          @relation("notifications_fromUser")
   onCampaigns           UsersOnCampaigns[]
-  did                   Did?                    @relation(fields: [didId], references: [id], onDelete: SetNull)
   feedbacksOnBusinesses FeedbacksOnBusinesses[]
   repliesOnFeedbacks    ReplyOnFeedback[]
 
   @@map("users")
+}
+
+model Social {
+  id         Int       @id @default(autoincrement())
+  lastUpdate DateTime? @map("last_update") @db.Timestamp(6)
+  twitterId  String?
+  twitter    String?
+  discordId  String?
+  discord    String?
+  telegramId String?
+  telegram   String?
+  userId     Int       @unique @map("user_id")
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@map("socials")
 }
 
 model FollowersOnBusinesses {
@@ -117,25 +120,24 @@ model Email {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   email     String   @unique @db.VarChar
-  code      String?  @db.VarChar
 
   @@map("emails")
 }
 
 model Notification {
-  id         Int               @id @default(autoincrement())
-  type       Notificationtypes
-  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
-  businessId Int               @map("business_id")
-  reviewId   Int               @map("review_id")
-  seen       Boolean           @default(false)
+  id         Int       @id @default(autoincrement())
+  type       String
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  seen       Boolean   @default(false)
   to         Int
+  reviewId   Int?      @map("review_id")
+  businessId Int?      @map("business_id")
   from       Int?
-  metaData   String?           @map("meta_data") @db.VarChar
-  business   Business          @relation(fields: [businessId], references: [id])
-  review     Review            @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  userTo     User              @relation("notifications_toUser", fields: [to], references: [id])
-  userFrom   User?             @relation("notifications_fromUser", fields: [from], references: [id])
+  metaData   String?   @map("meta_data") @db.VarChar
+  userTo     User      @relation("notifications_toUser", fields: [to], references: [id])
+  business   Business? @relation(fields: [businessId], references: [id])
+  review     Review?   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userFrom   User?     @relation("notifications_fromUser", fields: [from], references: [id])
 
   @@map("notifications")
 }
@@ -153,9 +155,11 @@ model Review {
   headline      String?         @db.VarChar
   comment       String?         @db.VarChar
   txnHash       String?         @unique @map("txn_hash")
+  criterias     CriteriaReview[]
   histories     ReviewHistory[]
   replies       Reply[]
   notifications Notification[]
+  activities    Activity[]
   business      Business        @relation(fields: [businessId], references: [id])
   user          User            @relation(fields: [userId], references: [id])
 
@@ -237,10 +241,12 @@ model UsersOnCampaigns {
 }
 
 model Did {
-  id      Int    @id
-  doc     Json
-  txnHash String @map("txn_hash") @db.VarChar
-  users   User[]
+  id       Int    @id
+  doc      Json
+  username String
+  fullname String
+  txnHash  String @map("txn_hash") @db.VarChar
+  users    User[]
 
   @@map("dids")
 }
@@ -293,12 +299,31 @@ model ReplyOnFeedback {
   @@map("replies_on_feedbacks")
 }
 
-model HashMap {
-  id    Int      @id @default(autoincrement())
-  key   String   @unique @db.VarChar
-  value String[] @db.VarChar
 
-  @@map("hash_maps")
+
+model Activity {
+  id         Int          @id @default(autoincrement())
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  kind       ActivityKind
+  userId     Int          @map("user_id")
+  reviewId   Int          @map("review_id")
+  point      Int
+  fromUserId Int?         @map("from_user_id")
+  user       User         @relation("activities_of_users", fields: [userId], references: [id])
+  reactUser  User?        @relation("reacted_activities_of_users", fields: [fromUserId], references: [id])
+  onReview   Review       @relation(fields: [reviewId], references: [id])
+
+  @@map("activities")
+}
+
+model CriteriaReview {
+  id         Int          @id @default(autoincrement())
+  name       String
+  value      Int
+  reviewId   Int @map("review_id")
+  review     Review @relation(fields: [reviewId], references: [id])
+
+  @@map("criteria_reviews")
 }
 
 enum MediaSoucres {
@@ -309,30 +334,10 @@ enum MediaSoucres {
   Blog
 }
 
-enum Notificationtypes {
-  like
-  dislike
-  reply
-  tagged
-  review_rejected
-  review_approved
-}
-
 enum ReviewStatuses {
   approved
   pending
   rejected
-}
-
-enum MainCategories {
-  currencies
-  exchange
-  cryptocurrencies
-  nft
-  metaverse
-  ai
-  others
-  lightning_network @map("lightning network")
 }
 
 enum SuperUserRoles {
@@ -344,4 +349,12 @@ enum BusinessStatus {
   approved
   pending
   rejected
+}
+
+enum ActivityKind {
+  reviewapproved
+  reacthelpful
+  reactdownful
+  reply
+  share
 }

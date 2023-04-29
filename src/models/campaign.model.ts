@@ -1,24 +1,25 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Campaign } from '@prisma/client';
-import { UserModel } from './user.model';
+import { Field } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
+import { Int } from '@nestjs/graphql';
+import { UsersOnCampaigns } from './users-on-campaigns.model';
 
 @ObjectType()
-export class CampaignModel implements Campaign {
+export class Campaign {
   @Field(() => Int)
-  id!: number;
+  id: number;
 
   @Field(() => Date)
-  createdAt!: Date;
+  createdAt: Date;
 
   @Field(() => String)
-  title!: string;
+  title: string;
 
   @Field(() => String)
-  description!: string;
+  description: string;
 
   @Field(() => String, { nullable: true })
-  metadata!: string | null;
+  metadata?: string;
 
-  @Field(() => [UserModel])
-  usersOnCampaign!: Array<UserModel>;
+  @Field(() => [UsersOnCampaigns], { nullable: 'items' })
+  usersOnCampaign: Array<UsersOnCampaigns>;
 }

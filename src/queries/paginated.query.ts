@@ -2,8 +2,8 @@ import { Type } from '@nestjs/common';
 import { ArgsType, Field, Int, ObjectType } from '@nestjs/graphql';
 import { IsInt, Max, Min } from 'class-validator';
 
-export interface IPaginatedType<T> {
-  data: T[];
+export interface IPaginatedType<TData> {
+  nodes: TData[];
   limit: number;
   page: number;
   total: number;
@@ -22,13 +22,13 @@ export class PaginatedInput {
   page: number;
 }
 
-export function PaginatedQueryFactory<T>(
-  classRef: Type<T>
-): Type<IPaginatedType<T>> {
+export function PaginatedQueryFactory<TData>(
+  classRef: Type<TData>
+): Type<IPaginatedType<TData>> {
   @ObjectType({ isAbstract: true })
-  abstract class PaginatedType implements IPaginatedType<T> {
+  abstract class PaginatedType implements IPaginatedType<TData> {
     @Field(() => [classRef], { nullable: 'items' })
-    data: T[];
+    nodes: TData[];
 
     @Field(() => Int)
     page: number;
@@ -39,5 +39,5 @@ export function PaginatedQueryFactory<T>(
     @Field(() => Int)
     total: number;
   }
-  return PaginatedType as Type<IPaginatedType<T>>;
+  return PaginatedType as Type<IPaginatedType<TData>>;
 }
